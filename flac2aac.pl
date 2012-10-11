@@ -4,12 +4,14 @@ use IPC::Run qw( run timeout );
 
 #my $neroEncOpts = "-q 0.6 -cbr 131072";
 
-#1.0 lossless
-#0.5 good
-
 #we need to be very careful of how we handle text input.
 #avoid any method that would require escaping special characters.
 
+#quality range from 0 to 1
+#1.0 lossless
+#0.5 good
+
+#use flac2aac.pl quality source destination
 
 my $quality = $ARGV[0];
 my $src = $ARGV[1];
