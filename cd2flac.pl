@@ -1,0 +1,59 @@
+#!/usr/bin/perl
+
+my $drive = $ARGV[0];
+$drive = "/dev/cdrom" if ($drive eq '');
+
+my $ripTrack = $ARGV[1];
+my $paranoidArgs = $ARGV[2];
+
+my $cddb = `cddbget -f -I -c $drive`;
+
+$cddb =~ /artist: (.*)/;
+my $artist = $1;
+
+$cddb =~ /title: (.*)/;
+my $album = $1;
+
+$cddb =~ /genre: (.*)/;
+my $genre = $1;
+
+$cddb =~ /year: (\d+)/;
+my $year = $1;
+
+$cddb =~ /trackno: (\d+)/;
+my $trackno = $1;
+
+my $meta = "-T ALBUM=\"$album\" -T ARTIST=\"$artist\" -T GENRE=\"$genre\" -T DATE=\"$year\"";
+
+my $path = "cdrip/$artist/$album";
+system("mkdir -p \"$path\"");
+
+if ($ripTrack eq '')
+{
+	for (my $i = 1; $i<=$trackno; ++$i)
+	{
+		RipTrack($i);
+	}
+}
+else
+{
+	RipTrack($ripTrack);
+}
+
+system("eject $drive");
+
+sub RipTrack
+{
+	my ($track) = @_;
+	$cddb =~ /track $track: (.*)/;
+	my $trackTitle = $1;
+#	print "$trackTitle\n";
+	my $file = sprintf("%.2d",$track) . " - $trackTitle.flac";
+	$file =~ s/\//-/g;
+	$file = "$path/$file";
+#	print "$file\n";
+	my $mm = "$meta -T TITLE=\"$trackTitle\" -T TRACKNUMBER=\"$track\"";
+
+	system("cdparanoia -d $drive $paranoidArgs $track - | flac -8 $mm -  > \"$file\" 2> /dev/null");
+#	system("~/neroAacTag \"$file\" $mm 2> /dev/null");
+}
